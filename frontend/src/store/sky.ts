@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { STARS, CONSTELLATIONS } from '../data/stars'
-import type { Star } from '../types'
+import { PLANETS } from '../data/planets'
+import type { Star, Planet } from '../types'
 
 export const useSkyStore = defineStore('sky', () => {
   const viewDate = ref(new Date())
@@ -11,7 +12,9 @@ export const useSkyStore = defineStore('sky', () => {
   const showLabels = ref(true)
   const showConstLines = ref(true)
   const showGrid = ref(true)
+  const showPlanets = ref(true)
   const selectedStar = ref<Star | null>(null)
+  const selectedPlanet = ref<Planet | null>(null)
   const searchQuery = ref('')
   const latitude = ref(39.9) // Beijing default
 
@@ -28,6 +31,15 @@ export const useSkyStore = defineStore('sky', () => {
     if (!searchQuery.value) return []
     const q = searchQuery.value.toLowerCase()
     return STARS.filter(s => s.name.toLowerCase().includes(q)).slice(0, 5)
+  })
+
+  const filteredPlanets = computed(() => {
+    if (!searchQuery.value) return []
+    const q = searchQuery.value.toLowerCase()
+    return PLANETS.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.nameCn.includes(q)
+    )
   })
 
   function projectStar(ra: number, dec: number, cx: number, cy: number, scale: number): [number, number] {
@@ -59,6 +71,7 @@ export const useSkyStore = defineStore('sky', () => {
   }
 
   function selectStar(x: number, y: number, cx: number, cy: number, scale: number) {
+    selectedPlanet.value = null
     let closest: Star | null = null
     let minDist = 20
     for (const star of STARS) {
@@ -66,13 +79,27 @@ export const useSkyStore = defineStore('sky', () => {
       const dist = Math.hypot(sx - x, sy - y)
       if (dist < minDist) { minDist = dist; closest = star }
     }
+    if (showPlanets.value) {
+      let closestPlanet: Planet | null = null
+      let minPlanetDist = 25
+      for (const planet of PLANETS) {
+        const [px, py] = projectStar(planet.ra, planet.dec, cx, cy, scale)
+        const dist = Math.hypot(px - x, py - y)
+        if (dist < minPlanetDist) { minPlanetDist = dist; closestPlanet = planet }
+      }
+      if (closestPlanet) {
+        selectedPlanet.value = closestPlanet
+        selectedStar.value = null
+        return
+      }
+    }
     selectedStar.value = closest
   }
 
   return {
-    viewDate, zoom, panX, panY, showLabels, showConstLines, showGrid,
-    selectedStar, searchQuery, latitude, localSiderealTime, filteredStars,
+    viewDate, zoom, panX, panY, showLabels, showConstLines, showGrid, showPlanets,
+    selectedStar, selectedPlanet, searchQuery, latitude, localSiderealTime, filteredStars, filteredPlanets,
     projectStar, starRadius, spectralColor, selectStar,
-    STARS, CONSTELLATIONS
+    STARS, CONSTELLATIONS, PLANETS
   }
 })

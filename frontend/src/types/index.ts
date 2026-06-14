@@ -12,3 +12,16 @@ export interface Constellation {
   stars: number[]  // indices into star array
   lines: [number, number][]  // pairs of star indices
 }
+
+export interface Planet {
+  name: string
+  nameCn: string
+  ra: number
+  dec: number
+  mag: number
+  color: string
+  diameter: number
+  distance: string
+  type: string
+  orbitalPeriod: string
+}

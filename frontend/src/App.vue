@@ -7,11 +7,18 @@
       <!-- Search -->
       <div>
         <input v-model="store.searchQuery" placeholder="搜索天体..." class="w-full bg-gray-800 rounded px-3 py-2 text-sm" />
-        <div v-if="store.filteredStars.length" class="mt-1">
+        <div v-if="store.filteredStars.length || store.filteredPlanets.length" class="mt-1">
           <div v-for="s in store.filteredStars" :key="s.name"
-            @click="store.selectedStar = s"
+            @click="store.selectedStar = s; store.selectedPlanet = null"
             class="bg-gray-800 p-2 rounded mt-1 cursor-pointer hover:bg-gray-700 text-sm">
             {{ s.name }} <span class="text-gray-400">mag {{ s.mag }}</span>
+          </div>
+          <div v-for="p in store.filteredPlanets" :key="p.name"
+            @click="store.selectedPlanet = p; store.selectedStar = null"
+            class="bg-gray-800 p-2 rounded mt-1 cursor-pointer hover:bg-gray-700 text-sm border-l-4"
+            :style="{ borderColor: p.color }">
+            <span class="font-bold" :style="{ color: p.color }">{{ p.nameCn }}</span>
+            <span class="text-gray-400 ml-1">{{ p.name }}</span>
           </div>
         </div>
       </div>
@@ -46,6 +53,9 @@
         <label class="flex items-center gap-2 text-sm">
           <input type="checkbox" v-model="store.showGrid" /> 坐标网格
         </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" v-model="store.showPlanets" /> 行星占位
+        </label>
       </div>
 
       <!-- Star Info -->
@@ -59,11 +69,46 @@
         </div>
       </div>
 
+      <!-- Planet Info -->
+      <div v-if="store.selectedPlanet" class="bg-gray-800 rounded-xl p-3 border-2"
+        :style="{ borderColor: store.selectedPlanet.color }">
+        <h3 class="font-bold flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full inline-block" :style="{ backgroundColor: store.selectedPlanet.color }"></span>
+          <span :style="{ color: store.selectedPlanet.color }">
+            {{ store.selectedPlanet.nameCn }}
+          </span>
+          <span class="text-gray-400 text-xs">{{ store.selectedPlanet.name }}</span>
+        </h3>
+        <div class="text-xs text-gray-300 mt-2 space-y-1">
+          <p>赤经: {{ store.selectedPlanet.ra.toFixed(2) }}h</p>
+          <p>赤纬: {{ store.selectedPlanet.dec.toFixed(2) }}°</p>
+          <p>视星等: {{ store.selectedPlanet.mag }}</p>
+          <p>直径: {{ store.selectedPlanet.diameter.toLocaleString() }} km</p>
+          <p>距日距离: {{ store.selectedPlanet.distance }}</p>
+          <p>类型: {{ store.selectedPlanet.type }}</p>
+          <p>公转周期: {{ store.selectedPlanet.orbitalPeriod }}</p>
+        </div>
+      </div>
+
       <!-- Constellation list -->
       <div class="text-xs">
         <h4 class="text-gray-400 mb-1">可见星座</h4>
         <div v-for="c in store.CONSTELLATIONS" :key="c.name" class="py-1 text-gray-300">
           {{ c.nameCn }} <span class="text-gray-500">({{ c.name }})</span>
+        </div>
+      </div>
+
+      <!-- Planet list -->
+      <div class="text-xs">
+        <h4 class="text-gray-400 mb-1">太阳系行星</h4>
+        <div v-for="p in store.PLANETS" :key="p.name"
+          @click="store.selectedPlanet = p; store.selectedStar = null"
+          class="py-1 text-gray-300 cursor-pointer hover:bg-gray-800 rounded px-1 flex items-center gap-2"
+          :class="{ 'bg-gray-800': store.selectedPlanet?.name === p.name }">
+          <span class="w-3 h-3 rounded-full inline-block flex-shrink-0" :style="{ backgroundColor: p.color }"></span>
+          <span class="font-medium">{{ p.nameCn }}</span>
+          <span class="text-gray-500">({{ p.name }})</span>
+          <span class="text-gray-500 ml-auto">mag {{ p.mag }}</span>
         </div>
       </div>
 

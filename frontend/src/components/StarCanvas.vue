@@ -106,6 +106,56 @@ function draw() {
     }
   }
 
+  // planets
+  if (store.showPlanets) {
+    for (const planet of store.PLANETS) {
+      const [x, y] = store.projectStar(planet.ra, planet.dec, cx, cy, scale)
+      if (x < -500 || x > w + 500 || y < -500 || y > h + 500) continue
+      const radius = Math.max(3, 7 - planet.mag) * store.zoom
+      const isSelected = store.selectedPlanet?.name === planet.name
+
+      // glow
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 4)
+      gradient.addColorStop(0, planet.color)
+      gradient.addColorStop(1, 'transparent')
+      ctx.fillStyle = gradient
+      ctx.beginPath()
+      ctx.arc(x, y, radius * 4, 0, Math.PI * 2)
+      ctx.fill()
+
+      // core - planet disc
+      ctx.fillStyle = planet.color
+      ctx.beginPath()
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.fill()
+
+      // saturn ring
+      if (planet.name === 'Saturn') {
+        ctx.strokeStyle = planet.color
+        ctx.lineWidth = 2 * store.zoom
+        ctx.beginPath()
+        ctx.ellipse(x, y, radius * 2.2, radius * 0.6, -0.3, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+
+      // selected highlight
+      if (isSelected) {
+        ctx.strokeStyle = '#ffd700'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.arc(x, y, radius + 6, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+
+      // label
+      if (store.showLabels) {
+        ctx.fillStyle = isSelected ? '#ffd700' : 'rgba(255,180,100,0.9)'
+        ctx.font = `bold ${11 * store.zoom}px system-ui`
+        ctx.fillText(planet.nameCn, x + radius + 6, y + 4)
+      }
+    }
+  }
+
   // horizon
   ctx.strokeStyle = 'rgba(0,200,100,0.3)'
   ctx.lineWidth = 2
